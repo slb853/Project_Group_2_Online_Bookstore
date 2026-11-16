@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Inventory</title>
+</head>
+<body>
+    <h1>Book Inventory</h1>
+
+    <h2>Request a Book</h2>
+    <form action="/books" method="post">
+        <label>
+            Title
+            <input name="book_title" maxlength="200" required>
+        </label>
+        <label>
+            Author (optional)
+            <input name="author" maxlength="200">
+        </label>
+        <label>
+            Genre
+            <input name="book_genre" maxlength="50">
+        </label>
+        <label>
+            Publication date
+            <input name="publication_date" type="date">
+        </label>
+        <label>
+            Description
+            <textarea name="book_description" maxlength="800"></textarea>
+        </label>
+        <label>
+            ISBN
+            <input name="book_isbn" maxlength="30">
+        </label>
+        <button type="submit">Save book</button>
+    </form>
+
+    <h2>Books</h2>
+    <% if (books.length === 0) { %>
+        <p>No books have been added yet.</p>
+    <% } else { %>
+        <table>
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Author</th>
+                    <th>Genre</th>
+                    <th>Publication date</th>
+                    <th>Description</th>
+                    <th>ISBN</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% books.forEach((book) => { %>
+                    <tr>
+                        <td><%= book.title %></td>
+                        <td><%= book.author %></td>
+                        <td><%= book.genre || "" %></td>
+                        <td><%= book.publication_date || "" %></td>
+                        <td><%= book.description || "" %></td>
+                        <td><%= book.isbn || "" %></td>
+                    </tr>
+                <% }) %>
+            </tbody>
+        </table>
+    <% } %>
+</body>
+</html>
