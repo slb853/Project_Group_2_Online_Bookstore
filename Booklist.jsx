@@ -6,7 +6,7 @@ function toBook(book, index) {
   const isbn = book.book_isbn || "";
 
   return {
-    id: isbn || `${book.book_title}-${book.author || "unknown"}-${index}`,
+    id: book.book_id ?? (isbn || `${book.book_title}-${book.author || "unknown"}-${index}`),
     title: book.book_title,
     author: book.author || "Unknown author",
     genre: book.book_genre || "Uncategorized",

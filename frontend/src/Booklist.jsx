@@ -1,111 +1,138 @@
+import { useState, useEffect } from "react";
 
-import { useState } from "react";
-
-const sampleBooks = [
-  {
-    id: 1,
-    title: "The Great Gatsby",
-    author: "F. Scott Fitzgerald",
-    genre: "Classic Fiction",
-    cover: "https://covers.openlibrary.org/b/isbn/9780743273565-L.jpg"
-  },
-  {
-    id: 2,
-    title: "Pride and Prejudice",
-    author: "Jane Austen",
-    genre: "Romance",
-    cover: "https://covers.openlibrary.org/b/isbn/9780141439518-L.jpg"
-  },
-  {
-    id: 3,
-    title: "To Kill a Mockingbird",
-    author: "Harper Lee",
-    genre: "Classic Fiction",
-    cover: "https://covers.openlibrary.org/b/isbn/9780061120084-L.jpg"
-  }
-];
-
-
-function BookList() {
+function Booklist() {
+  const [books, setBooks] = useState([]);            
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedBook, setSelectedBook] = useState(null);   
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
 
-const filteredBooks = sampleBooks.filter((book) => {
-  const search = searchTerm.toLowerCase();
+
+
+  useEffect(() => {
+    fetch("/api/books")
+      .then((res) => {
+        if (!res.ok) throw new Error("Server error");
+        return res.json();                              
+      })
+      .then((data) => setBooks(data))                   
+      .catch(() =>
+        setError("Could not load books. Check that the backend is running.")
+      )
+      .finally(() => setIsLoading(false));
+  }, []);
+
+  
+  function openDetails(bookId) {
+    fetch(`/api/books/${bookId}`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Server error");
+        return res.json();
+      })
+      .then((data) => setSelectedBook(data))
+      .catch(() => setError("Could not load that book's details."));
+  }
+
+
+
+
+
+
+  const filteredBooks = books.filter((book) => {
+    const search = searchTerm.toLowerCase();
+    return (
+      (book.book_title || "").toLowerCase().includes(search) ||
+      (book.author || "").toLowerCase().includes(search) ||
+      (book.book_genre || "").toLowerCase().includes(search)
+    );
+  });
+
+
 
   return (
-    book.title.toLowerCase().includes(search) ||
-    book.author.toLowerCase().includes(search) ||
-    book.genre.toLowerCase().includes(search)
-  );
-});
 
-
-  return (
     <div>
-     
-<header className="book-header" id="home">
-  <h1>Online Bookstore</h1>
+      <header className="book-header" id="home">
+        <h1>Online Bookstore</h1>
 
-  <nav className="book-nav" aria-label="Main navigation">
-    <a href="#home">Home</a>
-    <a href="#books">Books</a>
-    <a href="#reviews">Reviews</a>
-  </nav>
-</header>
+        <nav className="book-nav" aria-label="Main navigation">
+          <a href="#home" onClick={() => setSelectedBook(null)}>Home</a>
+          <a href="#books" onClick={() => setSelectedBook(null)}>Books</a>
+          <a href="#reviews">Reviews</a>
+        </nav>
+      </header>
 
-<div className="book-search">
-  <input
-    type="text"
-    placeholder="Search books by title, author, or genre..."
-    aria-label="Search books"
-    value={searchTerm}
-    onChange={(e) => setSearchTerm(e.target.value)}
-  />
-  <button type="button">Search</button>
-</div>
+      {error && <p className="no-results">{error}</p>}
 
+      {selectedBook ? (
 
-        <h2 id="books">Browse Books</h2>
-
-
-      <div className="book-list">
-
-    {filteredBooks.length === 0 && (
-        <p className="no-results">
-        No books found. Please try a different search.
-        </p>
-    )}
-
-        {filteredBooks.map((book) => (
-
-          <div className="book-card" key={book.id}>
+        <div className="book-details">
+          {selectedBook.book_isbn && (
             <img
-              src={book.cover}
-              alt={`Cover of ${book.title}`}
-              width="150"
+              src={`https://covers.openlibrary.org/b/isbn/${selectedBook.book_isbn}-L.jpg`}
+              alt={`Cover of ${selectedBook.book_title}`}
+              width="200"
             />
-            <h3>{book.title}</h3>
-            <p>Author: {book.author}</p>
-            <p>Genre: {book.genre}</p>
-            <button type="button">View Details</button>
+          )}
+          <h2>{selectedBook.book_title}</h2>
+          <p>Author: {selectedBook.author || "Unknown author"}</p>
+          <p>Genre: {selectedBook.book_genre || "Uncategorized"}</p>
+          <p>Published: {selectedBook.publication_date || "Unknown"}</p>
+          <p>ISBN: {selectedBook.book_isbn || "Not available"}</p>
+          <p>{selectedBook.book_description || "No description provided."}</p>
+          <button type="button" onClick={() => setSelectedBook(null)}>
+            Back to books
+          </button>
+        </div>
+      ) : (
+
+        <>
+          <div className="book-search">
+            <input
+              type="text"
+              placeholder="Search books by title, author, or genre..."
+              aria-label="Search books"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <button type="button">Search</button>
           </div>
-        ))}
-      </div>
+          <h2 id="books">Browse Books</h2>
+
+          {isLoading && <p className="no-results">Loading books...</p>}
+
+          <div className="book-list">
+            {!isLoading && !error && filteredBooks.length === 0 && (
+              <p className="no-results">
+                No books found. Please try a different search.
+              </p>
+            )}
+            {filteredBooks.map((book) => (
+              <div className="book-card" key={book.book_id}>
+                {book.book_isbn ? (
+                  <img
+                    src={`https://covers.openlibrary.org/b/isbn/${book.book_isbn}-L.jpg`}
+                    alt={`Cover of ${book.book_title}`}
+                    width="150"
+                  />
+                ) : (
+                  <div className="book-cover-placeholder">No cover available</div>
+                )}
+                <h3>{book.book_title}</h3>
+                <p>Author: {book.author || "Unknown author"}</p>
+                <p>Genre: {book.book_genre || "Uncategorized"}</p>
+                <button type="button" onClick={() => openDetails(book.book_id)}>
+                  View Details
+                </button>
+              </div>
+            ))}
+          </div>
 
 
-    <section className="popular-books">
-        <h2>Most Popular Books</h2>
-        <p>Explore some of our featured books!</p>
-    </section>
-<div className="popular-list">
-  <p>1. The Great Gatsby — F. Scott Fitzgerald</p>
-  <p>2. Pride and Prejudice — Jane Austen</p>
-  <p>3. To Kill a Mockingbird — Harper Lee</p>
-</div>
-
-
+        </>
+      )}
     </div>
   );
 }
 
-export default BookList;
+export default Booklist;

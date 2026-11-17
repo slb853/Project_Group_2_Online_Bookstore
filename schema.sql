@@ -5,4 +5,5 @@ CREATE TABLE IF NOT EXISTS book_library (
     publication_date VARCHAR(10),
     book_description VARCHAR(800),
     book_isbn VARCHAR(15)
+    book_id SERIAL PRIMARY KEY
 );
