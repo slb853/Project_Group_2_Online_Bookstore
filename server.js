@@ -3,6 +3,12 @@ const express = require("express");
 const { Pool } = require("pg");
 
 const app = express();
+
+const cors = require('cors');
+app.use(cors());
+
+
+
 const PORT = Number(process.env.PORT || 3001);
 const pool = new Pool({
   host: process.env.PGHOST || process.env.MYSQL_HOST || "localhost",
@@ -27,10 +33,11 @@ async function bookAlreadyExists(isbn, title, author) {
   return rows.length > 0;
 }
 
+      //add book_id and make primary search now since using isbn caused issues
 app.get("/api/books", async (req, res) => {
   try {
     const { rows } = await pool.query(
-      "SELECT book_title, author, book_genre, publication_date, book_description, book_isbn FROM book_library ORDER BY book_title"
+      "SELECT  book_id, book_title, author, book_genre, publication_date, book_description, book_isbn FROM book_library ORDER BY book_title"
     );
     res.json(rows);
   } catch (error) {
@@ -38,6 +45,33 @@ app.get("/api/books", async (req, res) => {
     res.status(500).json({ error: "Could not retrieve books from the database." });
   }
 });
+
+
+app.get("/api/books/:id", async (req, res) => {
+
+  try {
+    const id = Number(req.params.id);          
+    if (Number.isNaN(id)) {                    
+      return res.status(400).json({ error: "Book id must be a number." });
+    }
+
+    const { rows } = await pool.query(
+      "SELECT book_id, book_title, author, book_genre, publication_date, book_description, book_isbn FROM book_library WHERE book_id = $1",
+      [id]                                     //will replce $1 just placeholder
+    );
+
+    if (rows.length === 0) {                   
+      return res.status(404).json({ error: "Book not found." });
+    }
+    res.json(rows[0]);                        
+  } catch (error) {
+    console.error("Could not retrieve book from book_library:", error);
+    res.status(500).json({ error: "Could not retrieve the book from the database." });
+  }
+});
+
+
+
 
 app.post("/api/books", async (req, res) => {
   const body =

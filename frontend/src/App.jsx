@@ -1,10 +1,8 @@
 import "./App.css";
-import BookList from "./Booklist";
+import Booklist from "./Booklist";
 
 function App() {
-  return (
-    <BookList />
-  );
+  return <Booklist />;
 }
 
 export default App;
