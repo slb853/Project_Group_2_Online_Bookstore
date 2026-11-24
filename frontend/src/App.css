@@ -206,3 +206,28 @@
     grid-template-columns: 1fr;
   }
 }
+
+
+/* Phase 2 - Book Filtering */
+.book-filters {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin: 20px auto;
+  flex-wrap: wrap;
+}
+
+.book-filters label {
+  color: white;
+  font-size: 16px;
+}
+
+.book-filters select {
+  padding: 10px;
+  font-size: 16px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  background-color: white;
+  color: #333;
+}

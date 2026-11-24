@@ -6,6 +6,9 @@ function Booklist() {
   const [selectedBook, setSelectedBook] = useState(null);   
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [selectedGenre, setSelectedGenre] = useState("All");
+  const [sortOption, setSortOption] = useState("default");
+
 
 
 
@@ -32,20 +35,50 @@ function Booklist() {
       .then((data) => setSelectedBook(data))
       .catch(() => setError("Could not load that book's details."));
   }
+const genres = [
+  "All",
+  ...new Set(books.map((book) => book.book_genre).filter(Boolean)),
+];
 
 
 
+const filteredBooks = books.filter((book) => {
+  const search = searchTerm.toLowerCase();
 
+  const matchesSearch =
+    (book.book_title || "").toLowerCase().includes(search) ||
+    (book.author || "").toLowerCase().includes(search) ||
+    (book.book_genre || "").toLowerCase().includes(search);
 
+  const matchesGenre =
+    selectedGenre === "All" ||
+    book.book_genre === selectedGenre;
 
-  const filteredBooks = books.filter((book) => {
-    const search = searchTerm.toLowerCase();
-    return (
-      (book.book_title || "").toLowerCase().includes(search) ||
-      (book.author || "").toLowerCase().includes(search) ||
-      (book.book_genre || "").toLowerCase().includes(search)
-    );
-  });
+  return matchesSearch && matchesGenre;
+});
+
+const sortedBooks = [...filteredBooks].sort((a, b) => {
+  if (sortOption === "newest") {
+    return new Date(b.publication_date) - new Date(a.publication_date);
+  }
+
+  if (sortOption === "oldest") {
+    return new Date(a.publication_date) - new Date(b.publication_date);
+  }
+if (sortOption === "genre") {
+  return (a.book_genre || "").localeCompare(b.book_genre || "");
+}
+
+if (sortOption === "rating") {
+  return (
+    Number(b.average_rating || 0) -
+    Number(a.average_rating || 0)
+  );
+}
+
+return 0;
+});
+
 
 
 
@@ -97,6 +130,36 @@ function Booklist() {
             />
             <button type="button">Search</button>
           </div>
+
+
+<div className="book-filters">
+  <label htmlFor="genre-filter">Filter by Genre: </label>
+  <select
+    id="genre-filter"
+    value={selectedGenre}
+    onChange={(e) => setSelectedGenre(e.target.value)}
+  >
+    {genres.map((genre) => (
+      <option key={genre} value={genre}>
+        {genre}
+      </option>
+    ))}
+  </select>
+
+<label htmlFor="sort-option">Sort Books By: </label>
+<select
+  id="sort-option"
+  value={sortOption}
+  onChange={(e) => setSortOption(e.target.value)}
+>
+  <option value="default">Default Order</option>
+  <option value="newest">Publication Date (Newest First)</option>
+  <option value="oldest">Publication Date (Oldest First)</option>
+  <option value="genre">Genre (A-Z)</option>
+  <option value="rating">Highest Rated</option>
+</select>
+</div>
+
           <h2 id="books">Browse Books</h2>
 
           {isLoading && <p className="no-results">Loading books...</p>}
@@ -107,7 +170,8 @@ function Booklist() {
                 No books found. Please try a different search.
               </p>
             )}
-            {filteredBooks.map((book) => (
+            {sortedBooks.map((book) => (
+
               <div className="book-card" key={book.book_id}>
                 {book.book_isbn ? (
                   <img
